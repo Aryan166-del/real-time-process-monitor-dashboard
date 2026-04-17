@@ -7,10 +7,75 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Real-Time Process Monitoring Dashboard</h1>
-        <p>Initial project setup completed successfully.</p>
-        <p>This dashboard will display process states, CPU usage, and memory consumption.</p>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Real-Time Process Monitoring Dashboard</h1>
+            <p>Monitor process states, CPU usage, and memory consumption</p>
+        </header>
+
+        <section class="stats-section">
+            <div class="stat-card">
+                <h2>CPU Usage</h2>
+                <p>25%</p>
+            </div>
+            <div class="stat-card">
+                <h2>Memory Usage</h2>
+                <p>48%</p>
+            </div>
+            <div class="stat-card">
+                <h2>Active Processes</h2>
+                <p>132</p>
+            </div>
+            <div class="stat-card">
+                <h2>System Status</h2>
+                <p>Normal</p>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <h2>Process List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>PID</th>
+                        <th>Process Name</th>
+                        <th>Status</th>
+                        <th>CPU %</th>
+                        <th>Memory %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1024</td>
+                        <td>chrome.exe</td>
+                        <td>Running</td>
+                        <td>12%</td>
+                        <td>18%</td>
+                    </tr>
+                    <tr>
+                        <td>2048</td>
+                        <td>python.exe</td>
+                        <td>Running</td>
+                        <td>8%</td>
+                        <td>10%</td>
+                    </tr>
+                    <tr>
+                        <td>3072</td>
+                        <td>explorer.exe</td>
+                        <td>Sleeping</td>
+                        <td>2%</td>
+                        <td>6%</td>
+                    </tr>
+                    <tr>
+                        <td>4096</td>
+                        <td>code.exe</td>
+                        <td>Running</td>
+                        <td>15%</td>
+                        <td>12%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
