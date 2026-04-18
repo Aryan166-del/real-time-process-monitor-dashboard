@@ -10,9 +10,17 @@ def home():
 @app.route('/data')
 def data():
     #  System stats
-    cpu = psutil.cpu_percent(interval=1)   # accurate CPU
+    cpu = psutil.cpu_percent(interval=1)   # accurate CPU usage
     memory = psutil.virtual_memory().percent
     processes_count = len(psutil.pids())
+
+    #  Dynamic system status
+    if cpu < 50:
+        status = "Healthy"
+    elif cpu < 80:
+        status = "Moderate"
+    else:
+        status = "Critical"
 
     #  Process list
     processes = []
@@ -25,21 +33,21 @@ def data():
                 "memory_percent": proc.memory_percent()
             })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue  # better than pass
+            continue
 
-    #  Sort top processes
+    #  Sort top processes by CPU usage
     top_processes = sorted(
         processes,
         key=lambda x: x['cpu_percent'],
         reverse=True
     )[:5]
 
-    #  Response
+    #  Final response
     return jsonify({
         "cpu": cpu,
         "memory": memory,
         "processes": processes_count,
-        "status": "Running",
+        "status": status,
         "top_processes": top_processes
     })
 

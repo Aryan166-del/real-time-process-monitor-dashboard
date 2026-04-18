@@ -30,19 +30,46 @@ function createChart() {
     });
 }
 
-// 🔥 Fetch Data Function
+//  Fetch Data Function
 function fetchData() {
     fetch('/data')
         .then(response => response.json())
         .then(data => {
 
-            // Update dashboard cards
+            //  Update cards
             document.getElementById("cpu").innerText = data.cpu + "%";
             document.getElementById("memory").innerText = data.memory + "%";
             document.getElementById("processes").innerText = data.processes;
             document.getElementById("status").innerText = data.status;
 
-            // 🔥 Update Top Processes Table
+            //  Progress bars
+            document.getElementById("cpu-bar").style.width = data.cpu + "%";
+            document.getElementById("memory-bar").style.width = data.memory + "%";
+
+            //  Dynamic color for bars
+            let cpuBar = document.getElementById("cpu-bar");
+            cpuBar.className = "progress-fill";
+
+            if (data.cpu < 50) {
+                cpuBar.classList.add("green");
+            } else if (data.cpu < 80) {
+                cpuBar.classList.add("orange");
+            } else {
+                cpuBar.classList.add("red");
+            }
+
+            //  Status color
+            let statusEl = document.getElementById("status");
+
+            if (data.status === "Healthy") {
+                statusEl.style.color = "green";
+            } else if (data.status === "Moderate") {
+                statusEl.style.color = "orange";
+            } else {
+                statusEl.style.color = "red";
+            }
+
+            //  Update Table
             let table = document.getElementById("processTable");
             table.innerHTML = "";
 
@@ -56,10 +83,16 @@ function fetchData() {
                     <td>${proc.memory_percent.toFixed(1)}%</td>
                 `;
 
+                //  Highlight heavy processes
+                if (proc.cpu_percent > 20) {
+                    row.style.color = "red";
+                    row.style.fontWeight = "bold";
+                }
+
                 table.appendChild(row);
             });
 
-            // 🔥 Update Graph Data
+            //  Update Graph
             if (cpuData.length > 10) {
                 cpuData.shift();
                 labels.shift();
@@ -75,11 +108,11 @@ function fetchData() {
         });
 }
 
-// 🔥 Initialize Chart
+//  Initialize Chart
 createChart();
 
-// 🔥 First call
+//  First call
 fetchData();
 
-// 🔥 Refresh every 2 seconds
+//  Refresh every 2 seconds
 setInterval(fetchData, 2000);

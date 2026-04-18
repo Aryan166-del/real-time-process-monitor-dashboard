@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- 🔥 Chart.js CDN -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -23,21 +23,35 @@
         <!-- Stats Cards -->
         <section class="stats-section">
 
+            <!-- CPU -->
             <div class="stat-card">
                 <h2>CPU Usage</h2>
                 <p id="cpu">0%</p>
+
+                <!--  Progress Bar -->
+                <div class="progress-bar">
+                    <div id="cpu-bar" class="progress-fill"></div>
+                </div>
             </div>
 
+            <!-- Memory -->
             <div class="stat-card">
                 <h2>Memory Usage</h2>
                 <p id="memory">0%</p>
+
+                <!--  Progress Bar -->
+                <div class="progress-bar">
+                    <div id="memory-bar" class="progress-fill"></div>
+                </div>
             </div>
 
+            <!-- Processes -->
             <div class="stat-card">
                 <h2>Active Processes</h2>
                 <p id="processes">0</p>
             </div>
 
+            <!-- Status -->
             <div class="stat-card">
                 <h2>System Status</h2>
                 <p id="status">Loading...</p>
@@ -45,7 +59,7 @@
 
         </section>
 
-        <!-- 🔥 Top Processes Table -->
+        <!--  Top Processes Table -->
         <section class="table-section">
             <h2>Top Processes</h2>
 
@@ -67,7 +81,7 @@
             </table>
         </section>
 
-        <!-- 🔥 NEW: CPU GRAPH SECTION -->
+        <!--  CPU Graph -->
         <section class="chart-section">
             <h2>CPU Usage Graph</h2>
             <canvas id="cpuChart"></canvas>
@@ -75,7 +89,7 @@
 
     </div>
 
-    <!-- JS file -->
+    <!-- JS -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
