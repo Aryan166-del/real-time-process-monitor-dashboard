@@ -6,6 +6,9 @@
     <title>Real-Time Process Monitoring Dashboard</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- 🔥 Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -61,8 +64,13 @@
                         <td colspan="4">Loading...</td>
                     </tr>
                 </tbody>
-
             </table>
+        </section>
+
+        <!-- 🔥 NEW: CPU GRAPH SECTION -->
+        <section class="chart-section">
+            <h2>CPU Usage Graph</h2>
+            <canvas id="cpuChart"></canvas>
         </section>
 
     </div>

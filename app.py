@@ -9,10 +9,12 @@ def home():
 
 @app.route('/data')
 def data():
-    cpu = psutil.cpu_percent(interval=1)
+    #  System stats
+    cpu = psutil.cpu_percent(interval=1)   # accurate CPU
     memory = psutil.virtual_memory().percent
     processes_count = len(psutil.pids())
 
+    #  Process list
     processes = []
     for proc in psutil.process_iter(['pid', 'name', 'memory_percent']):
         try:
@@ -23,10 +25,16 @@ def data():
                 "memory_percent": proc.memory_percent()
             })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
+            continue  # better than pass
 
-    top_processes = sorted(processes, key=lambda x: x['cpu_percent'], reverse=True)[:5]
+    #  Sort top processes
+    top_processes = sorted(
+        processes,
+        key=lambda x: x['cpu_percent'],
+        reverse=True
+    )[:5]
 
+    #  Response
     return jsonify({
         "cpu": cpu,
         "memory": memory,
@@ -35,6 +43,7 @@ def data():
         "top_processes": top_processes
     })
 
-#  THIS WAS MISSING (VERY IMPORTANT)
+
+#  Run server
 if __name__ == "__main__":
     app.run(debug=True)
