@@ -4,80 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Process Monitoring Dashboard</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
     <div class="dashboard-container">
+
+        <!-- Header -->
         <header class="dashboard-header">
             <h1>Real-Time Process Monitoring Dashboard</h1>
-            <p>Monitor process states, CPU usage, and memory consumption</p>
+            <p>Monitor CPU, Memory, and Running Processes</p>
         </header>
 
+        <!-- Stats Cards -->
         <section class="stats-section">
+
             <div class="stat-card">
-    <h2>CPU Usage</h2>
-    <p id="cpu">0%</p>
-</div>
-<div class="stat-card">
-    <h2>Memory Usage</h2>
-    <p id="memory">0%</p>
-</div>
-<div class="stat-card">
-    <h2>Active Processes</h2>
-    <p id="processes">0</p>
-</div>
-<div class="stat-card">
-    <h2>System Status</h2>
-    <p id="status">Loading...</p>
-</div>
+                <h2>CPU Usage</h2>
+                <p id="cpu">0%</p>
+            </div>
+
+            <div class="stat-card">
+                <h2>Memory Usage</h2>
+                <p id="memory">0%</p>
+            </div>
+
+            <div class="stat-card">
+                <h2>Active Processes</h2>
+                <p id="processes">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h2>System Status</h2>
+                <p id="status">Loading...</p>
+            </div>
+
         </section>
 
+        <!-- 🔥 Top Processes Table -->
         <section class="table-section">
-            <h2>Process List</h2>
+            <h2>Top Processes</h2>
+
             <table>
                 <thead>
                     <tr>
                         <th>PID</th>
-                        <th>Process Name</th>
-                        <th>Status</th>
+                        <th>Name</th>
                         <th>CPU %</th>
                         <th>Memory %</th>
                     </tr>
                 </thead>
-                <tbody>
+
+                <tbody id="processTable">
                     <tr>
-                        <td>1024</td>
-                        <td>chrome.exe</td>
-                        <td>Running</td>
-                        <td>12%</td>
-                        <td>18%</td>
-                    </tr>
-                    <tr>
-                        <td>2048</td>
-                        <td>python.exe</td>
-                        <td>Running</td>
-                        <td>8%</td>
-                        <td>10%</td>
-                    </tr>
-                    <tr>
-                        <td>3072</td>
-                        <td>explorer.exe</td>
-                        <td>Sleeping</td>
-                        <td>2%</td>
-                        <td>6%</td>
-                    </tr>
-                    <tr>
-                        <td>4096</td>
-                        <td>code.exe</td>
-                        <td>Running</td>
-                        <td>15%</td>
-                        <td>12%</td>
+                        <td colspan="4">Loading...</td>
                     </tr>
                 </tbody>
+
             </table>
         </section>
+
     </div>
 
+    <!-- JS file -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 </body>
 </html>

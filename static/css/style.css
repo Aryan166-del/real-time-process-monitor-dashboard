@@ -11,6 +11,7 @@ body {
     margin: 30px auto;
 }
 
+/* Header */
 .dashboard-header {
     text-align: center;
     margin-bottom: 30px;
@@ -26,6 +27,7 @@ body {
     font-size: 18px;
 }
 
+/* Cards */
 .stats-section {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -43,7 +45,7 @@ body {
 
 .stat-card h2 {
     margin-bottom: 10px;
-    font-size: 20px;
+    font-size: 18px;
     color: #2c3e50;
 }
 
@@ -53,6 +55,7 @@ body {
     color: #0077b6;
 }
 
+/* Table Section */
 .table-section {
     background: white;
     padding: 20px;
@@ -65,6 +68,7 @@ body {
     color: #1f3b57;
 }
 
+/* Table Styling */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -75,8 +79,7 @@ table thead {
     color: white;
 }
 
-table th,
-table td {
+table th, table td {
     padding: 12px;
     text-align: center;
     border-bottom: 1px solid #ddd;
@@ -84,4 +87,13 @@ table td {
 
 table tbody tr:hover {
     background-color: #f4f8fb;
+}
+
+/* Optional: smooth transitions */
+.stat-card, .table-section {
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover, .table-section:hover {
+    transform: translateY(-3px);
 }
