@@ -1,96 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Process Monitoring Dashboard</title>
+    <title>System Monitor</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- Chart.js -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <div class="dashboard-container">
+<div class="container">
 
-        <!-- Header -->
-        <header class="dashboard-header">
-            <h1>Real-Time Process Monitoring Dashboard</h1>
-            <p>Monitor CPU, Memory, and Running Processes</p>
-        </header>
+    <header>
+        <h1>🔥 Real-Time System Monitor</h1>
+        <p id="status">Loading...</p>
+    </header>
 
-        <!-- Stats Cards -->
-        <section class="stats-section">
+    <!-- CARDS -->
+    <div class="cards">
+        <div class="card">
+            <h3>CPU Usage</h3>
+            <p id="cpu" class="cpu">0%</p>
+        </div>
 
-            <!-- CPU -->
-            <div class="stat-card">
-                <h2>CPU Usage</h2>
-                <p id="cpu">0%</p>
+        <div class="card">
+            <h3>Memory</h3>
+            <p id="memory" class="memory">0%</p>
+        </div>
 
-                <!--  Progress Bar -->
-                <div class="progress-bar">
-                    <div id="cpu-bar" class="progress-fill"></div>
-                </div>
-            </div>
-
-            <!-- Memory -->
-            <div class="stat-card">
-                <h2>Memory Usage</h2>
-                <p id="memory">0%</p>
-
-                <!--  Progress Bar -->
-                <div class="progress-bar">
-                    <div id="memory-bar" class="progress-fill"></div>
-                </div>
-            </div>
-
-            <!-- Processes -->
-            <div class="stat-card">
-                <h2>Active Processes</h2>
-                <p id="processes">0</p>
-            </div>
-
-            <!-- Status -->
-            <div class="stat-card">
-                <h2>System Status</h2>
-                <p id="status">Loading...</p>
-            </div>
-
-        </section>
-
-        <!--  Top Processes Table -->
-        <section class="table-section">
-            <h2>Top Processes</h2>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>PID</th>
-                        <th>Name</th>
-                        <th>CPU %</th>
-                        <th>Memory %</th>
-                    </tr>
-                </thead>
-
-                <tbody id="processTable">
-                    <tr>
-                        <td colspan="4">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!--  CPU Graph -->
-        <section class="chart-section">
-            <h2>CPU Usage Graph</h2>
-            <canvas id="cpuChart"></canvas>
-        </section>
-
+        <div class="card">
+            <h3>Processes</h3>
+            <p id="processes" class="process">0</p>
+        </div>
     </div>
 
-    <!-- JS -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- TABLE -->
+    <div class="table-container">
+        <h2>Processes</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>CPU</th>
+                    <th>Memory</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="table"></tbody>
+        </table>
+    </div>
+
+    <!-- 🔥 UPDATED CHART SECTION -->
+    <div class="chart-container">
+        <h2>Performance</h2>
+
+        <div class="chart-grid">
+
+            <div class="chart-box">
+                <h3>CPU Usage</h3>
+                <canvas id="cpuChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <h3>Memory Usage</h3>
+                <canvas id="memoryChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
 </html>
