@@ -38,6 +38,34 @@ header h1 {
 
 header p {
     margin-top: 8px;
+    font-weight: 600;
+}
+
+/* =========================
+   SEARCH BAR
+========================= */
+.search-container {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.search-container input {
+    width: 60%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    background: #1e293b;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.search-container input:focus {
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+.search-container input::placeholder {
     color: #94a3b8;
 }
 
@@ -52,17 +80,17 @@ header p {
 }
 
 .card {
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(30, 41, 59, 0.85);
     padding: 20px;
     border-radius: 15px;
     text-align: center;
     backdrop-filter: blur(10px);
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
     transition: 0.3s;
 }
 
 .card:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-6px) scale(1.03);
 }
 
 .card h3 {
@@ -71,7 +99,7 @@ header p {
 }
 
 .card p {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: bold;
 }
 
@@ -79,7 +107,6 @@ header p {
 .cpu { color: #22c55e; }
 .memory { color: #f59e0b; }
 .process { color: #38bdf8; }
-.status { color: #ef4444; }
 
 /* =========================
    TABLE
@@ -88,7 +115,7 @@ header p {
     background: rgba(30, 41, 59, 0.9);
     border-radius: 15px;
     padding: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
 }
 
 table {
@@ -103,8 +130,8 @@ thead {
 
 thead th {
     padding: 12px;
+    font-size: 13px;
     text-transform: uppercase;
-    font-size: 14px;
 }
 
 tbody tr {
@@ -112,13 +139,18 @@ tbody tr {
 }
 
 tbody tr:hover {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgba(56, 189, 248, 0.15);
 }
 
 td {
     padding: 10px;
     text-align: center;
 }
+
+/* PROCESS STATE COLORS */
+.state-running { color: #22c55e; font-weight: bold; }
+.state-sleeping { color: #f59e0b; }
+.state-stopped { color: #ef4444; }
 
 /* =========================
    BUTTON
@@ -135,63 +167,149 @@ button {
 
 button:hover {
     transform: scale(1.1);
-    background: linear-gradient(45deg, #dc2626, #b91c1c);
 }
 
 /* =========================
-   CHART SECTION (UPDATED)
+   CHART SECTION
 ========================= */
 .chart-container {
     margin-top: 30px;
     background: rgba(30, 41, 59, 0.9);
     padding: 20px;
     border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
 }
 
-/* 🔥 GRID FOR CHARTS */
 .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
-/* INDIVIDUAL CHART BOX */
 .chart-box {
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(15, 23, 42, 0.85);
     padding: 15px;
     border-radius: 12px;
 }
 
-/* TITLE */
 .chart-box h3 {
     margin-bottom: 10px;
     color: #94a3b8;
 }
 
-/* CANVAS */
 .chart-box canvas {
     width: 100% !important;
     height: 250px !important;
 }
 
-/* MOBILE RESPONSIVE */
-@media (max-width: 768px) {
-    .chart-grid {
-        grid-template-columns: 1fr;
-    }
-}
-/* SEARCH BAR */
-.search-container {
-    margin-bottom: 15px;
-    text-align: center;
+/* =========================
+   🔥 SCHEDULING SECTION
+========================= */
+.scheduling-container {
+    margin-top: 30px;
+    background: rgba(30, 41, 59, 0.9);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
 }
 
-.search-container input {
-    width: 60%;
+.scheduler-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.scheduler-form input,
+.scheduler-form select {
     padding: 10px;
     border-radius: 8px;
     border: none;
     outline: none;
-    font-size: 16px;
+    background: #1e293b;
+    color: #fff;
+    min-width: 120px;
+}
+
+.scheduler-form button {
+    background: linear-gradient(45deg, #22c55e, #16a34a);
+}
+
+/* =========================
+   🔥 GANTT CHART (ANIMATED)
+========================= */
+#ganttChart {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gantt-block {
+    background: linear-gradient(45deg, #38bdf8, #0ea5e9);
+    padding: 12px 16px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    min-width: 80px;
+    font-weight: bold;
+
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.5s forwards;
+}
+
+.gantt-block small {
+    display: block;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================
+   PROCESS LIFECYCLE
+========================= */
+.lifecycle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.state {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+.state.active {
+    background: #22c55e;
+    color: white;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .search-container input {
+        width: 90%;
+    }
+
+    .scheduler-form {
+        flex-direction: column;
+        align-items: center;
+    }
 }

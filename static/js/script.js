@@ -1,14 +1,16 @@
 const socket = io();
 
-// Data arrays
+// ==============================
+// GRAPH DATA
+// ==============================
 let cpuData = [];
 let memoryData = [];
 let labels = [];
-
-// Max graph points
 const MAX_POINTS = 40;
 
-// CPU Chart
+// ==============================
+// CPU CHART
+// ==============================
 const cpuChart = new Chart(document.getElementById("cpuChart"), {
     type: 'line',
     data: {
@@ -26,17 +28,13 @@ const cpuChart = new Chart(document.getElementById("cpuChart"), {
     options: {
         responsive: true,
         animation: false,
-        plugins: {
-            legend: { display: true }
-        },
-        scales: {
-            x: { display: false },
-            y: { min: 0, max: 100 }
-        }
+        scales: { y: { min: 0, max: 100 } }
     }
 });
 
-// MEMORY Chart
+// ==============================
+// MEMORY CHART
+// ==============================
 const memoryChart = new Chart(document.getElementById("memoryChart"), {
     type: 'line',
     data: {
@@ -54,72 +52,69 @@ const memoryChart = new Chart(document.getElementById("memoryChart"), {
     options: {
         responsive: true,
         animation: false,
-        plugins: {
-            legend: { display: true }
-        },
-        scales: {
-            x: { display: false },
-            y: { min: 0, max: 100 }
-        }
+        scales: { y: { min: 0, max: 100 } }
     }
 });
 
-// Socket connected
-socket.on('connect', () => {
-    console.log("✅ Connected to server");
+// ==============================
+// SEARCH BAR
+// ==============================
+let searchValue = "";
+document.getElementById("search").addEventListener("input", (e) => {
+    searchValue = e.target.value.toLowerCase();
 });
 
-// MAIN DATA EVENT
+// ==============================
+// SOCKET DATA
+// ==============================
 socket.on('stats', data => {
 
-    // 🔹 Update stats
     document.getElementById("cpu").innerText = data.cpu + "%";
     document.getElementById("memory").innerText = data.memory + "%";
     document.getElementById("processes").innerText = data.processes;
     document.getElementById("status").innerText = data.status;
 
-    // 🔹 Status color (realistic)
     const statusEl = document.getElementById("status");
-    if (data.status === "Healthy") {
-        statusEl.style.color = "#22c55e";
-    } else if (data.status === "Moderate") {
-        statusEl.style.color = "#f59e0b";
-    } else {
-        statusEl.style.color = "#ef4444";
-    }
+    statusEl.style.color =
+        data.status === "Healthy" ? "#22c55e" :
+        data.status === "Moderate" ? "#f59e0b" :
+        "#ef4444";
 
-    // 🔹 Update process table
     const table = document.getElementById("table");
     table.innerHTML = "";
 
-    data.process_list.forEach(p => {
+    data.process_list
+        .filter(p =>
+            p.name.toLowerCase().includes(searchValue) ||
+            String(p.pid).includes(searchValue)
+        )
+        .forEach(p => {
 
-        let row = document.createElement("tr");
+            let cpuColor =
+                p.cpu_percent > 50 ? "#ef4444" :
+                p.cpu_percent > 20 ? "#f59e0b" :
+                "#22c55e";
 
-        // 🔥 Dynamic CPU color
-        let cpuColor =
-            p.cpu_percent > 50 ? "#ef4444" :
-            p.cpu_percent > 20 ? "#f59e0b" :
-            "#22c55e";
+            let row = document.createElement("tr");
 
-        row.innerHTML = `
-            <td>${p.pid}</td>
-            <td>${p.name}</td>
-            <td style="color:${cpuColor}; font-weight:bold;">
-                ${p.cpu_percent.toFixed(1)}%
-            </td>
-            <td>${p.memory_percent.toFixed(1)}%</td>
-            <td>
-                <button onclick="killProcess(${p.pid})">
-                    End
-                </button>
-            </td>
-        `;
+            row.innerHTML = `
+                <td>${p.pid}</td>
+                <td>${p.name}</td>
+                <td>${p.state || "Running"}</td>
+                <td>${p.priority || "-"}</td>
+                <td style="color:${cpuColor}; font-weight:bold;">
+                    ${p.cpu_percent.toFixed(1)}%
+                </td>
+                <td>${p.memory_percent.toFixed(1)}%</td>
+                <td>
+                    <button onclick="killProcess(${p.pid})">End</button>
+                </td>
+            `;
 
-        table.appendChild(row);
-    });
+            table.appendChild(row);
+        });
 
-    // 🔥 Graph update (smooth + limited)
+    // GRAPH UPDATE
     if (cpuData.length >= MAX_POINTS) {
         cpuData.shift();
         memoryData.shift();
@@ -134,72 +129,153 @@ socket.on('stats', data => {
     memoryChart.update();
 });
 
-
-// 🔥 Kill process (improved UX)
+// ==============================
+// KILL PROCESS
+// ==============================
 function killProcess(pid) {
-
-    if (!confirm(`Are you sure you want to kill PID ${pid}?`)) return;
+    if (!confirm(`Kill PID ${pid}?`)) return;
 
     fetch('/kill', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pid: pid })
+        body: JSON.stringify({ pid })
     })
     .then(res => res.json().then(data => ({
         status: res.status,
         body: data
     })))
     .then(res => {
-
-        if (res.status === 200) {
-            showToast(res.body.message, "success");
-        } else {
-            showToast(res.body.message, "error");
-        }
-
+        showToast(res.body.message, res.status === 200 ? "success" : "error");
     })
-    .catch(() => {
-        showToast("❌ Network error", "error");
-    });
+    .catch(() => showToast("Network error", "error"));
 }
 
-
-// 🔥 Professional Toast Notification
-function showToast(message, type = "success") {
-
+// ==============================
+// TOAST
+// ==============================
+function showToast(message, type) {
     const toast = document.createElement("div");
 
     toast.innerText = message;
-
     toast.style.position = "fixed";
     toast.style.bottom = "20px";
     toast.style.right = "20px";
-    toast.style.padding = "12px 20px";
-    toast.style.borderRadius = "10px";
+    toast.style.padding = "10px 15px";
+    toast.style.borderRadius = "8px";
     toast.style.color = "white";
-    toast.style.fontSize = "14px";
-    toast.style.zIndex = "9999";
-    toast.style.opacity = "0";
-    toast.style.transition = "0.3s";
-
-    // 🔥 Colors
-    if (type === "success") {
-        toast.style.background = "#22c55e";
-    } else {
-        toast.style.background = "#ef4444";
-    }
+    toast.style.background = type === "success" ? "#22c55e" : "#ef4444";
 
     document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
 
-    // Animate
-    setTimeout(() => {
-        toast.style.opacity = "1";
-        toast.style.transform = "translateY(-10px)";
-    }, 100);
+// ==============================
+// 🔥 CPU SCHEDULING
+// ==============================
+let processQueue = [];
 
-    // Remove
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+// ADD PROCESS
+function addProcess() {
+
+    const arrival = parseInt(document.getElementById("arrival").value);
+    const burst = parseInt(document.getElementById("burst").value);
+    const priority = parseInt(document.getElementById("priority").value);
+
+    if (isNaN(arrival) || isNaN(burst)) {
+        showToast("Enter valid values", "error");
+        return;
+    }
+
+    processQueue.push({
+        id: "P" + (processQueue.length + 1),
+        arrival,
+        burst,
+        priority
+    });
+
+    showToast("Process Added", "success");
+}
+
+// RUN FCFS
+function runScheduling() {
+
+    if (processQueue.length === 0) {
+        showToast("Add processes first", "error");
+        return;
+    }
+
+    const algo = document.getElementById("algo").value;
+
+    // 🔥 Call backend (CORRECT LOGIC)
+    fetch('/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            processes: processQueue,
+            algo: algo,
+            quantum: 2   // used only for Round Robin
+        })
+    })
+    .then(res => res.json())
+    .then(gantt => {
+
+        if (!Array.isArray(gantt)) {
+            showToast("Scheduling error", "error");
+            return;
+        }
+
+        animateGantt(gantt); // 🔥 draw correct result
+    })
+    .catch(() => {
+        showToast("Server error", "error");
+    });
+}
+// ==============================
+// 🔥 ANIMATED GANTT CHART
+// ==============================
+function animateGantt(gantt) {
+
+    const container = document.getElementById("ganttChart");
+    container.innerHTML = "";
+
+    let i = 0;
+
+    function drawStep() {
+
+        if (i >= gantt.length) {
+            drawTimeline(gantt); // 🔥 add time scale after animation
+            return;
+        }
+
+        const g = gantt[i];
+
+        let block = document.createElement("div");
+        block.className = "gantt-block";
+
+        // 🔥 WIDTH based on execution time (IMPORTANT)
+        let duration = g.end - g.start;
+        block.style.width = (duration * 40) + "px"; // scale factor
+
+        block.style.opacity = "0";
+        block.style.transform = "translateY(10px)";
+        block.style.transition = "0.4s";
+
+        block.innerHTML = `
+            <div style="font-weight:bold">${g.id}</div>
+            <small>${g.start} - ${g.end}</small>
+        `;
+
+        container.appendChild(block);
+
+        // animation effect
+        setTimeout(() => {
+            block.style.opacity = "1";
+            block.style.transform = "translateY(0)";
+        }, 50);
+
+        i++;
+        setTimeout(drawStep, 500);
+    }
+
+    drawStep();
 }

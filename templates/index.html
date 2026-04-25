@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>System Monitor</title>
+    <title>OS Process & CPU Monitor</title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+    <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
 <div class="container">
 
+    <!-- ================= HEADER ================= -->
     <header>
-        <h1>🔥 Real-Time System Monitor</h1>
+        <h1>🔥 Process & CPU Monitor (Module 1)</h1>
         <p id="status">Loading...</p>
     </header>
 
-    <!-- CARDS -->
+    <!-- ================= STATS CARDS ================= -->
     <div class="cards">
         <div class="card">
             <h3>CPU Usage</h3>
@@ -30,33 +38,57 @@
         </div>
 
         <div class="card">
-            <h3>Processes</h3>
+            <h3>Total Processes</h3>
             <p id="processes" class="process">0</p>
         </div>
     </div>
 
-    <!-- TABLE -->
+    <!-- ================= SEARCH ================= -->
+    <div class="search-container">
+        <input type="text" id="search" placeholder="🔍 Search by PID or Name...">
+    </div>
+
+    <!-- ================= PROCESS TABLE ================= -->
     <div class="table-container">
-        <h2>Processes</h2>
+        <h2>Running Processes</h2>
 
         <table>
             <thead>
                 <tr>
                     <th>PID</th>
                     <th>Name</th>
-                    <th>CPU</th>
-                    <th>Memory</th>
+                    <th>State</th>
+                    <th>Priority</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
                     <th>Action</th>
                 </tr>
             </thead>
 
-            <tbody id="table"></tbody>
+            <tbody id="table">
+                <tr>
+                    <td colspan="7">Loading...</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
-    <!-- 🔥 UPDATED CHART SECTION -->
+    <!-- ================= PROCESS LIFECYCLE ================= -->
     <div class="chart-container">
-        <h2>Performance</h2>
+        <h2>Process Lifecycle</h2>
+
+        <div class="lifecycle">
+            <span class="state new">New</span>
+            ➝ <span class="state ready">Ready</span>
+            ➝ <span class="state running active">Running</span>
+            ➝ <span class="state waiting">Waiting</span>
+            ➝ <span class="state terminated">Terminated</span>
+        </div>
+    </div>
+
+    <!-- ================= PERFORMANCE GRAPH ================= -->
+    <div class="chart-container">
+        <h2>Performance Graph</h2>
 
         <div class="chart-grid">
 
@@ -73,8 +105,39 @@
         </div>
     </div>
 
+    <!-- ================= SCHEDULING ================= -->
+    <div class="chart-container">
+        <h2>CPU Scheduling Simulator</h2>
+
+        <div class="scheduler-form">
+
+            <input type="number" id="arrival" placeholder="Arrival Time">
+            <input type="number" id="burst" placeholder="Burst Time">
+            <input type="number" id="priority" placeholder="Priority">
+
+            <button onclick="addProcess()">Add Process</button>
+
+            <select id="algo">
+                <option value="FCFS">FCFS</option>
+                <option value="SJF">SJF</option>
+                <option value="RR">Round Robin</option>
+                <option value="Priority">Priority</option>
+            </select>
+
+            <button onclick="runScheduling()">Run Simulation</button>
+
+        </div>
+
+        <!-- GANTT CHART OUTPUT -->
+        <div id="ganttChart" class="gantt">
+            <p style="color:#94a3b8;">No scheduling run yet</p>
+        </div>
+
+    </div>
+
 </div>
 
+<!-- JS (IMPORTANT: always at bottom) -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
