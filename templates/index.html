@@ -1,81 +1,463 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>System Monitor</title>
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTOS Monitor | CSE316</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
-<div class="container">
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="header">
+  <div class="header-brand">
+    <span class="brand-icon">⬡</span>
+    <div>
+      <div class="brand-name">RTOS<span class="brand-accent">Monitor</span></div>
+      <div class="brand-sub">CSE316 · Operating Systems Dashboard</div>
+    </div>
+  </div>
+  <div class="header-stats" id="header-stats">
+    <div class="hstat"><span class="hstat-label">CPU</span><span class="hstat-val" id="h-cpu">—</span></div>
+    <div class="hstat"><span class="hstat-label">MEM</span><span class="hstat-val" id="h-mem">—</span></div>
+    <div class="hstat"><span class="hstat-label">DISK</span><span class="hstat-val" id="h-disk">—</span></div>
+    <div class="hstat"><span class="hstat-label">PROCS</span><span class="hstat-val" id="h-procs">—</span></div>
+    <div class="hstat"><span class="hstat-label">UPTIME</span><span class="hstat-val" id="h-uptime">—</span></div>
+  </div>
+  <div class="header-clock" id="clock">00:00:00</div>
+</header>
 
-    <header>
-        <h1>🔥 Real-Time System Monitor</h1>
-        <p id="status">Loading...</p>
-    </header>
+<!-- ══════════════ NAV TABS ══════════════ -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="overview">⬡ Overview</button>
+  <button class="tab-btn" data-tab="processes">⚙ Process &amp; CPU</button>
+  <button class="tab-btn" data-tab="memory">◈ Memory &amp; Deadlock</button>
+  <button class="tab-btn" data-tab="ipc">⇆ IPC &amp; Disk</button>
+</nav>
 
-    <!-- CARDS -->
-    <div class="cards">
-        <div class="card">
-            <h3>CPU Usage</h3>
-            <p id="cpu" class="cpu">0%</p>
-        </div>
+<!-- ══════════════════════════════════════
+     TAB 1 — OVERVIEW
+══════════════════════════════════════ -->
+<section class="tab-content active" id="tab-overview">
 
-        <div class="card">
-            <h3>Memory</h3>
-            <p id="memory" class="memory">0%</p>
-        </div>
+  <!-- Top KPI cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card" id="kpi-cpu">
+      <div class="kpi-icon">⬡</div>
+      <div class="kpi-body">
+        <div class="kpi-label">CPU Usage</div>
+        <div class="kpi-value" id="ov-cpu">—%</div>
+        <div class="kpi-bar"><div class="kpi-fill" id="ov-cpu-bar" style="width:0%"></div></div>
+        <div class="kpi-sub" id="ov-cpu-cores">— cores</div>
+      </div>
+    </div>
+    <div class="kpi-card" id="kpi-mem">
+      <div class="kpi-icon">◈</div>
+      <div class="kpi-body">
+        <div class="kpi-label">Memory</div>
+        <div class="kpi-value" id="ov-mem">—%</div>
+        <div class="kpi-bar"><div class="kpi-fill" id="ov-mem-bar" style="width:0%"></div></div>
+        <div class="kpi-sub" id="ov-mem-detail">— / — GB</div>
+      </div>
+    </div>
+    <div class="kpi-card" id="kpi-disk">
+      <div class="kpi-icon">▣</div>
+      <div class="kpi-body">
+        <div class="kpi-label">Disk Usage</div>
+        <div class="kpi-value" id="ov-disk">—%</div>
+        <div class="kpi-bar"><div class="kpi-fill" id="ov-disk-bar" style="width:0%"></div></div>
+        <div class="kpi-sub" id="ov-disk-detail">— / — GB</div>
+      </div>
+    </div>
+    <div class="kpi-card" id="kpi-net">
+      <div class="kpi-icon">⇆</div>
+      <div class="kpi-body">
+        <div class="kpi-label">Network I/O</div>
+        <div class="kpi-value" id="ov-net">—</div>
+        <div class="kpi-sub" id="ov-net-detail">↑ — MB · ↓ — MB</div>
+      </div>
+    </div>
+    <div class="kpi-card" id="kpi-uptime">
+      <div class="kpi-icon">◷</div>
+      <div class="kpi-body">
+        <div class="kpi-label">System Uptime</div>
+        <div class="kpi-value" id="ov-uptime">—</div>
+        <div class="kpi-sub" id="ov-boot">boot: —</div>
+      </div>
+    </div>
+  </div>
 
-        <div class="card">
-            <h3>Processes</h3>
-            <p id="processes" class="process">0</p>
-        </div>
+  <!-- CPU history sparkline -->
+  <div class="panel">
+    <div class="panel-header"><span>CPU History (60s)</span><span class="panel-badge" id="cpu-live-badge">LIVE</span></div>
+    <div class="chart-wrap">
+      <canvas id="cpuChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Memory history sparkline -->
+  <div class="panel">
+    <div class="panel-header"><span>Memory History (60s)</span></div>
+    <div class="chart-wrap">
+      <canvas id="memChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Per-core bars -->
+  <div class="panel">
+    <div class="panel-header"><span>Per-Core CPU Load</span></div>
+    <div id="core-bars" class="core-bars"></div>
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════════════
+     TAB 2 — PROCESS & CPU SCHEDULING
+══════════════════════════════════════ -->
+<section class="tab-content" id="tab-processes">
+
+  <!-- Live process table -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>Live Process Table</span>
+      <div class="panel-controls">
+        <input type="text" class="filter-input" id="proc-filter" placeholder="Filter by name…">
+        <button class="btn btn-sm" onclick="App.refreshProcesses()">↺ Refresh</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="proc-table">
+        <thead>
+          <tr>
+            <th>PID</th><th>Name</th><th>State</th><th>CPU%</th>
+            <th>MEM%</th><th>Priority</th><th>Threads</th><th>Started</th>
+          </tr>
+        </thead>
+        <tbody id="proc-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="proc-footer">Loading…</div>
+  </div>
+
+  <!-- Scheduling Simulator -->
+  <div class="panel">
+    <div class="panel-header"><span>CPU Scheduling Simulator</span></div>
+
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Algorithm</label>
+        <select id="sched-algo" class="form-select">
+          <option value="fcfs">FCFS — First Come First Served</option>
+          <option value="sjf">SJF — Shortest Job First</option>
+          <option value="rr">Round Robin</option>
+          <option value="priority">Priority (Non-Preemptive)</option>
+        </select>
+      </div>
+      <div class="form-row" id="quantum-row" style="display:none">
+        <label>Quantum</label>
+        <input type="number" id="rr-quantum" value="2" min="1" max="20" class="form-input" style="width:80px">
+      </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-container">
-        <h2>Processes</h2>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>PID</th>
-                    <th>Name</th>
-                    <th>CPU</th>
-                    <th>Memory</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody id="table"></tbody>
+    <div class="proc-input-area">
+      <div class="proc-input-header">
+        <span>Processes</span>
+        <button class="btn btn-sm" onclick="App.addProcRow()">+ Add</button>
+        <button class="btn btn-sm btn-secondary" onclick="App.loadSampleProcs()">Sample</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="sched-input-table">
+          <thead>
+            <tr><th>PID</th><th>Arrival</th><th>Burst</th><th>Priority</th><th></th></tr>
+          </thead>
+          <tbody id="sched-input-tbody"></tbody>
         </table>
+      </div>
+      <button class="btn btn-primary" onclick="App.runSchedule()">▶ Run Simulation</button>
     </div>
 
-    <!-- 🔥 UPDATED CHART SECTION -->
-    <div class="chart-container">
-        <h2>Performance</h2>
+    <!-- Gantt Chart -->
+    <div id="gantt-section" style="display:none">
+      <div class="panel-header"><span>Gantt Chart</span></div>
+      <div class="gantt-wrap" id="gantt-chart"></div>
+      <div class="gantt-timeline" id="gantt-timeline"></div>
 
-        <div class="chart-grid">
+      <div class="sched-stats" id="sched-stats"></div>
 
-            <div class="chart-box">
-                <h3>CPU Usage</h3>
-                <canvas id="cpuChart"></canvas>
-            </div>
+      <div class="table-wrap" style="margin-top:1rem">
+        <table class="data-table" id="sched-result-table">
+          <thead>
+            <tr><th>PID</th><th>Arrival</th><th>Burst</th><th>Start</th><th>End</th><th>Waiting</th><th>Turnaround</th></tr>
+          </thead>
+          <tbody id="sched-result-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-            <div class="chart-box">
-                <h3>Memory Usage</h3>
-                <canvas id="memoryChart"></canvas>
-            </div>
-
+  <!-- Process Lifecycle diagram -->
+  <div class="panel">
+    <div class="panel-header"><span>Process Lifecycle State Machine</span></div>
+    <div class="lifecycle-diagram">
+      <div class="state-node" id="state-new">NEW</div>
+      <div class="state-arrow">→</div>
+      <div class="state-node" id="state-ready">READY</div>
+      <div class="state-arrow">→</div>
+      <div class="state-node active" id="state-running">RUNNING</div>
+      <div class="state-arrow">→</div>
+      <div class="state-node" id="state-terminated">TERMINATED</div>
+      <div class="lifecycle-waiting">
+        <div class="state-node" id="state-waiting">WAITING</div>
+        <div class="lifecycle-arrows">
+          <span class="arrow-up">↑ I/O Request</span>
+          <span class="arrow-down">↓ I/O Done</span>
         </div>
+      </div>
     </div>
+  </div>
 
-</div>
+</section>
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
+<!-- ══════════════════════════════════════
+     TAB 3 — MEMORY & DEADLOCK
+══════════════════════════════════════ -->
+<section class="tab-content" id="tab-memory">
+
+  <!-- Memory live stats -->
+  <div class="panel">
+    <div class="panel-header"><span>Live Memory Dashboard</span></div>
+    <div class="mem-grid">
+      <div class="mem-stat-card">
+        <div class="mem-stat-label">RAM Used</div>
+        <div class="mem-stat-value" id="m-used">—</div>
+      </div>
+      <div class="mem-stat-card">
+        <div class="mem-stat-label">RAM Free</div>
+        <div class="mem-stat-value" id="m-free">—</div>
+      </div>
+      <div class="mem-stat-card">
+        <div class="mem-stat-label">Cached</div>
+        <div class="mem-stat-value" id="m-cached">—</div>
+      </div>
+      <div class="mem-stat-card">
+        <div class="mem-stat-label">Swap Used</div>
+        <div class="mem-stat-value" id="m-swap">—</div>
+      </div>
+    </div>
+    <div class="ram-bar-wrap">
+      <div class="ram-bar">
+        <div class="ram-used" id="ram-used-bar"></div>
+        <div class="ram-cached" id="ram-cached-bar"></div>
+      </div>
+      <div class="ram-legend">
+        <span class="leg-used">■ Used</span>
+        <span class="leg-cached">■ Cached</span>
+        <span class="leg-free">■ Free</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Replacement Simulator -->
+  <div class="panel">
+    <div class="panel-header"><span>Page Replacement Simulator</span></div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Algorithm</label>
+        <select id="pr-algo" class="form-select">
+          <option value="fifo">FIFO</option>
+          <option value="lru">LRU</option>
+          <option value="optimal">Optimal</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Frames</label>
+        <input type="number" id="pr-frames" value="3" min="1" max="10" class="form-input" style="width:70px">
+      </div>
+      <div class="form-row">
+        <label>Page Reference String</label>
+        <input type="text" id="pr-pages" value="7 0 1 2 0 3 0 4 2 3 0 3 2 1 2" class="form-input" style="width:320px" placeholder="space-separated integers">
+      </div>
+      <button class="btn btn-primary" onclick="App.runPageReplacement()">▶ Simulate</button>
+    </div>
+    <div id="pr-result" style="display:none">
+      <div class="pr-stats" id="pr-stats"></div>
+      <div class="pr-trace-wrap" id="pr-trace"></div>
+    </div>
+  </div>
+
+  <!-- Banker's Algorithm -->
+  <div class="panel">
+    <div class="panel-header"><span>Banker's Algorithm — Deadlock Avoidance</span></div>
+    <div class="bankers-note">
+      Default uses 5 processes (P0–P4) and 3 resource types (A, B, C). Edit values below.
+    </div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Available Resources (A B C)</label>
+        <input type="text" id="bk-available" value="3 3 2" class="form-input">
+      </div>
+      <div class="form-row">
+        <label>Allocation Matrix (one row per process)</label>
+        <textarea id="bk-allocation" class="form-textarea" rows="5">0 1 0
+2 0 0
+3 0 2
+2 1 1
+0 0 2</textarea>
+      </div>
+      <div class="form-row">
+        <label>Max Need Matrix (one row per process)</label>
+        <textarea id="bk-max" class="form-textarea" rows="5">7 5 3
+3 2 2
+9 0 2
+2 2 2
+4 3 3</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="App.runBankers()">▶ Run Banker's</button>
+    </div>
+    <div id="bk-result" style="display:none" class="bk-result"></div>
+  </div>
+
+  <!-- Deadlock Detection RAG -->
+  <div class="panel">
+    <div class="panel-header"><span>Deadlock Detection — Resource Allocation Graph</span></div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Processes (comma-separated)</label>
+        <input type="text" id="rag-procs" value="P0,P1,P2" class="form-input">
+      </div>
+      <div class="form-row">
+        <label>Resources (comma-separated)</label>
+        <input type="text" id="rag-res" value="R0,R1" class="form-input">
+      </div>
+      <div class="form-row">
+        <label>Edges (format: FROM→TO per line)</label>
+        <textarea id="rag-edges" class="form-textarea" rows="5">P0→R0
+R0→P1
+P1→R1
+R1→P0</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="App.runDeadlockDetect()">▶ Detect Deadlock</button>
+    </div>
+    <div id="rag-result" style="display:none" class="rag-result"></div>
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════════════
+     TAB 4 — IPC, DISK & SYNC
+══════════════════════════════════════ -->
+<section class="tab-content" id="tab-ipc">
+
+  <!-- Disk stats -->
+  <div class="panel">
+    <div class="panel-header"><span>Disk Partitions</span></div>
+    <div id="disk-partitions" class="disk-partitions"></div>
+    <div class="chart-wrap" style="margin-top:1rem">
+      <canvas id="diskChart" height="90"></canvas>
+    </div>
+  </div>
+
+  <!-- Disk Scheduling Simulator -->
+  <div class="panel">
+    <div class="panel-header"><span>Disk Scheduling Simulator</span></div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Algorithm</label>
+        <select id="ds-algo" class="form-select">
+          <option value="fcfs">FCFS</option>
+          <option value="sstf">SSTF</option>
+          <option value="scan">SCAN</option>
+          <option value="cscan">C-SCAN</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Initial Head Position</label>
+        <input type="number" id="ds-head" value="50" min="0" max="199" class="form-input" style="width:80px">
+      </div>
+      <div class="form-row">
+        <label>Disk Requests (space-separated)</label>
+        <input type="text" id="ds-requests" value="82 170 43 140 24 16 190" class="form-input">
+      </div>
+      <button class="btn btn-primary" onclick="App.runDiskSchedule()">▶ Simulate</button>
+    </div>
+    <div id="ds-result" style="display:none">
+      <div class="ds-stats" id="ds-stats"></div>
+      <div class="disk-seq-wrap" id="ds-sequence"></div>
+      <canvas id="diskHeadChart" height="120" style="margin-top:1rem"></canvas>
+    </div>
+  </div>
+
+  <!-- IPC Monitor -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>IPC / Network Connections Monitor</span>
+      <button class="btn btn-sm" onclick="App.refreshIPC()">↺ Refresh</button>
+    </div>
+    <div id="ipc-summary" class="ipc-summary"></div>
+    <div class="table-wrap">
+      <table class="data-table" id="ipc-table">
+        <thead>
+          <tr><th>Type</th><th>Local</th><th>Remote</th><th>Status</th><th>PID</th></tr>
+        </thead>
+        <tbody id="ipc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Producer-Consumer Simulator -->
+  <div class="panel">
+    <div class="panel-header"><span>Producer-Consumer Simulation</span></div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Buffer Size</label>
+        <input type="number" id="pc-buffer" value="5" min="1" max="20" class="form-input" style="width:70px">
+      </div>
+      <div class="form-row">
+        <label>Producers</label>
+        <input type="number" id="pc-producers" value="2" min="1" max="5" class="form-input" style="width:70px">
+      </div>
+      <div class="form-row">
+        <label>Consumers</label>
+        <input type="number" id="pc-consumers" value="2" min="1" max="5" class="form-input" style="width:70px">
+      </div>
+      <div class="form-row">
+        <label>Steps</label>
+        <input type="number" id="pc-steps" value="10" min="5" max="30" class="form-input" style="width:70px">
+      </div>
+      <button class="btn btn-primary" onclick="App.runProducerConsumer()">▶ Simulate</button>
+    </div>
+    <div id="pc-result" style="display:none" class="pc-log"></div>
+  </div>
+
+  <!-- Dining Philosophers Simulator -->
+  <div class="panel">
+    <div class="panel-header"><span>Dining Philosophers Simulation</span></div>
+    <div class="sim-controls">
+      <div class="form-row">
+        <label>Philosophers</label>
+        <input type="number" id="dp-n" value="5" min="3" max="8" class="form-input" style="width:70px">
+      </div>
+      <div class="form-row">
+        <label>Steps</label>
+        <input type="number" id="dp-steps" value="15" min="5" max="30" class="form-input" style="width:70px">
+      </div>
+      <button class="btn btn-primary" onclick="App.runDiningPhilosophers()">▶ Simulate</button>
+    </div>
+    <div id="dp-result" style="display:none" class="dp-log"></div>
+  </div>
+
+</section>
+
+<!-- ══════════════ TOAST NOTIFICATION ══════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- Charts.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="/static/js/script.js"></script>
 </body>
 </html>
