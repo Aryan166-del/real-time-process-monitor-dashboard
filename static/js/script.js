@@ -130,7 +130,7 @@ const App = (() => {
     try {
       const r = await fetch("/api/overview");
       const d = await r.json();
-      $("h-cpu").textContent    = fmtNum(d.cpu_percent) + "%";
+      $("h-cpu").textContent    = fmtNum(d.cpu_percent, 1) + "%";
       $("h-mem").textContent    = fmtNum(d.mem_percent) + "%";
       $("h-disk").textContent   = fmtNum(d.disk_percent) + "%";
       $("h-procs").textContent  = d.process_count;
@@ -148,8 +148,8 @@ const App = (() => {
       $("ov-disk-bar").style.width = d.disk_percent + "%";
       $("ov-disk-detail").textContent = d.disk_used_gb + " / " + d.disk_total_gb + " GB";
 
-      $("ov-net").textContent      = "↑" + d.net_sent_mb + " MB";
-      $("ov-net-detail").textContent = "↑ " + d.net_sent_mb + " MB · ↓ " + d.net_recv_mb + " MB";
+      $("ov-net").textContent      = fmtNum(d.net_sent_kbps) + " KB/s";
+      $("ov-net-detail").textContent = "↑ " + fmtNum(d.net_sent_kbps) + " KB/s · ↓ " + fmtNum(d.net_recv_kbps) + " KB/s";
 
       $("ov-uptime").textContent   = d.uptime;
       $("ov-boot").textContent     = "boot: " + d.boot_time;
@@ -168,18 +168,22 @@ const App = (() => {
         cpuChart.update("none");
       }
 
-      // Per-core bars
+      // Per-core bars — height is the raw % value (0-100 scale maps to 0-80px track)
+      // We add a 2px minimum so even idle cores show a sliver (not invisible)
       const wrap = $("core-bars");
       wrap.innerHTML = "";
       (d.per_core || []).forEach((pct, i) => {
+        // clamp: minimum 2px out of 80px track = ~2.5%; show real value in label
+        const fillPct = Math.max(pct, 2);
+        const color = pct > 80 ? "var(--danger)" : pct > 50 ? "var(--accent3)" : "var(--accent)";
         const div = document.createElement("div");
         div.className = "core-bar-item";
         div.innerHTML = `
           <div class="core-bar-track">
-            <div class="core-bar-fill" style="height:${pct}%"></div>
+            <div class="core-bar-fill" style="height:${fillPct}%;background:${color}"></div>
           </div>
           <div class="core-bar-label">C${i}</div>
-          <div class="core-bar-pct">${fmtNum(pct)}%</div>`;
+          <div class="core-bar-pct" style="color:${color}">${fmtNum(pct)}%</div>`;
         wrap.appendChild(div);
       });
     } catch (e) { console.warn("CPU poll failed", e); }
@@ -262,8 +266,13 @@ const App = (() => {
           <td>${p.mem}%</td>
           <td>${p.priority}</td>
           <td>${p.threads}</td>
-          <td class="text-dim">${p.started}</td>`;
+          <td class="text-dim">${p.started}</td>
+          <td><button class="kill-btn" data-pid="${p.pid}" data-name="${p.name}" title="Terminate process">✕ Kill</button></td>`;
         tbody.appendChild(tr);
+      });
+      // Attach kill button handlers
+      tbody.querySelectorAll(".kill-btn").forEach(btn => {
+        btn.addEventListener("click", () => App.killProcess(+btn.dataset.pid, btn.dataset.name));
       });
 
       $("proc-footer").textContent = `Showing ${procs.length} / ${d.total} processes`;
@@ -713,11 +722,30 @@ const App = (() => {
     setInterval(refreshIPC,      10000);
   }
 
+  // ── Kill Process ──────────────────────────────
+  async function killProcess(pid, name) {
+    if (!confirm(`Terminate PID ${pid} (${name})? This cannot be undone.`)) return;
+    try {
+      const r = await fetch("/api/kill_process", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pid })
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) {
+        toast(d.error || "Kill failed", "error");
+      } else {
+        toast(`Killed PID ${pid} (${d.name})`);
+        setTimeout(refreshProcesses, 400);
+      }
+    } catch (e) { toast("Kill request failed", "error"); }
+  }
+
   // Public API
   return {
     init,
     refreshProcesses,
     refreshIPC,
+    killProcess,
     addProcRow,
     removeProcRow,
     loadSampleProcs,

@@ -1016,3 +1016,22 @@ body {
   .lifecycle-diagram { gap: 0.3rem; }
   .sim-controls { flex-direction: column; }
 }
+
+/* ── Kill Process Button ── */
+.kill-btn {
+  background: rgba(255,60,90,0.08);
+  border: 1px solid rgba(255,60,90,0.4);
+  border-radius: 3px;
+  color: var(--danger);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.kill-btn:hover {
+  background: rgba(255,60,90,0.22);
+  border-color: var(--danger);
+  box-shadow: 0 0 6px rgba(255,60,90,0.3);
+}
